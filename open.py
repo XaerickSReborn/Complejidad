@@ -14,7 +14,6 @@ frecuencia_rutas = {}
 
 # Cargar los datos de rutas y aeropuertos
 def cargar_datos() -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Carga los datos de rutas y aeropuertos desde URLs y los filtra para Norteamérica."""
     url_rutas = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat'
     url_aeropuertos = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat'
     
@@ -37,7 +36,6 @@ def cargar_datos() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 # Crear el grafo de rutas
 def crear_grafo(rutas_df: pd.DataFrame) -> nx.DiGraph:
-    """Construye el grafo de rutas usando NetworkX."""
     G = nx.DiGraph()
     for _, row in rutas_df.iterrows():
         source, destination = str(row['source_airport_id']), str(row['destination_airport_id'])
@@ -47,8 +45,7 @@ def crear_grafo(rutas_df: pd.DataFrame) -> nx.DiGraph:
 
 # Calcular rutas desde el aeropuerto de origen y visualizar
 def calcular_y_visualizar_rutas():
-    """Calcula y muestra las rutas desde el aeropuerto de origen."""
-    global G, aeropuertos_df  # Asegúrate de que la declaración global esté al inicio
+    global G, aeropuertos_df
 
     origen = aeropuerto_origen.get()
     origen_id = aeropuertos_df[aeropuertos_df['name'] == origen]['airport_id']
@@ -72,7 +69,8 @@ def calcular_y_visualizar_rutas():
 
 # Visualizar rutas desde el aeropuerto de origen usando Basemap
 def visualizar_rutas_conectadas(origen_id, rutas_desde_origen):
-    """Muestra las rutas conectadas desde un aeropuerto de origen."""
+
+    # Muestra las rutas conectadas desde un aeropuerto de origen.
     plt.figure(figsize=(15, 10))
     m = Basemap(llcrnrlon=-130, llcrnrlat=20, urcrnrlon=-60, urcrnrlat=55, projection='lcc', lat_1=33, lat_2=45, lon_0=-95)
     m.drawcoastlines()
@@ -95,7 +93,7 @@ def visualizar_rutas_conectadas(origen_id, rutas_desde_origen):
     plt.legend()
     plt.show()
 
-# Calcular la ruta rápida entre el aeropuerto de origen y destino
+# Calcular la ruta rapida entre el aeropuerto de origen y destino
 def calcular_ruta_rapida() -> None:
     global G, aeropuertos_df, distancias_minimas
     
@@ -113,11 +111,10 @@ def calcular_ruta_rapida() -> None:
     destino_id = str(destino_id.values[0])
     
     try:
-        # Calcular la ruta más rápida entre los aeropuertos de origen y destino
+        # Calcula la ruta más rapida entre los aeropuertos de origen y destino
         ruta_rapida = nx.shortest_path(G, source=origen_id, target=destino_id, weight='weight')
-        resultado.set(f"Ruta rápida encontrada: {ruta_rapida}")
+        resultado.set(f"Ruta rapida encontrada: {ruta_rapida}")
         
-        # Visualizar la ruta rápida en el mapa
         visualizar_ruta(ruta_rapida)
     except nx.NetworkXNoPath:
         resultado.set("No existe una ruta entre los aeropuertos seleccionados.")
@@ -150,11 +147,12 @@ def visualizar_ruta(path: list) -> None:
             m.plot(x1, y1, 'bo', markersize=10)
             m.plot(x2, y2, 'bo', markersize=10)
     
-    plt.title("Ruta Aérea")
+    plt.title("Ruta Aerea")
     plt.show()
 
 def calcular_flujo_maximo():
-    """Calcula el flujo máximo entre el aeropuerto de origen y destino."""
+
+    # Calcula el flujo maximo entre el aeropuerto de origen y destino.
     global G, aeropuertos_df
     origen, destino = aeropuerto_origen.get(), aeropuerto_destino.get()
     origen_id, destino_id = aeropuertos_df[aeropuertos_df['name'] == origen]['airport_id'], aeropuertos_df[aeropuertos_df['name'] == destino]['airport_id']
@@ -170,14 +168,15 @@ def calcular_flujo_maximo():
             G_flow[u][v]['capacity'] = 1
         flow_value, flow_dict = nx.maximum_flow(G_flow, origen_id, destino_id)
         flow_edges = [(u, v) for u in flow_dict for v, flow in flow_dict[u].items() if flow > 0]
-        resultado.set(f"Flujo máximo encontrado: {flow_value} rutas independientes")
+        resultado.set(f"Flujo maximo encontrado: {flow_value} rutas independientes")
         visualizar_flujo_maximo(flow_edges, origen_id, destino_id)
         
     except nx.NetworkXError as e:
-        resultado.set(f"Error al calcular el flujo máximo: {str(e)}")
+        resultado.set(f"Error al calcular el flujo maximo: {str(e)}")
 
+# Visualiza el grafo con las rutas del flujo maximo.
 def visualizar_flujo_maximo(flow_edges: List[Tuple[str, str]], origen_id: str, destino_id: str):
-    """Visualiza el grafo con las rutas del flujo máximo."""
+    
     plt.figure(figsize=(15, 10))
     m = Basemap(llcrnrlon=-130, llcrnrlat=20, urcrnrlon=-60, urcrnrlat=55, projection='lcc', lat_1=33, lat_2=45, lon_0=-95)
     m.drawcoastlines()
@@ -201,12 +200,13 @@ def visualizar_flujo_maximo(flow_edges: List[Tuple[str, str]], origen_id: str, d
             m.plot(x1, y1, 'bo', markersize=10)
             m.plot(x2, y2, 'bo', markersize=10)
     
-    plt.title("Rutas de Flujo Máximo")
+    plt.title("Rutas de Flujo Maximo")
     plt.legend()
     plt.show()
 
+# Actualiza la frecuencia de la ruta entre dos aeropuertos.
 def actualizar_frecuencia_ruta(origen_id: str, destino_id: str):
-    """Actualiza la frecuencia de la ruta entre dos aeropuertos."""
+    
     if (origen_id, destino_id) not in frecuencia_rutas:
         frecuencia_rutas[(origen_id, destino_id)] = 0
     frecuencia_rutas[(origen_id, destino_id)] += 1
@@ -217,17 +217,13 @@ def crear_interfaz():
     # Frame principal con scroll
     main_frame = ttk.Frame(root, padding="10")
     main_frame.pack(fill=tk.BOTH, expand=True)
-    
-    # Frame superior para los controles
     control_frame = ttk.Frame(main_frame)
     control_frame.pack(fill=tk.X, pady=(0, 10))
     
-    # Aeropuerto de origen
     ttk.Label(control_frame, text="Aeropuerto de origen:").grid(row=0, column=0, sticky=tk.W, pady=5)
     aeropuerto_origen = ttk.Combobox(control_frame, values=aeropuertos_df['name'].tolist(), width=50)
     aeropuerto_origen.grid(row=0, column=1, pady=5, padx=5)
     
-    # Aeropuerto de destino
     ttk.Label(control_frame, text="Aeropuerto de destino:").grid(row=1, column=0, sticky=tk.W, pady=5)
     aeropuerto_destino = ttk.Combobox(control_frame, values=aeropuertos_df['name'].tolist(), width=50)
     aeropuerto_destino.grid(row=1, column=1, pady=5, padx=5)
@@ -253,11 +249,11 @@ def crear_interfaz():
                                        command=mostrar_frecuencia_rutas)
     boton_frecuencia_rutas.pack(side=tk.LEFT, padx=5)
     
-    # Frame para el área de resultados con scroll
+
+    # Scroll
     result_frame = ttk.Frame(main_frame)
     result_frame.pack(fill=tk.BOTH, expand=True)
     
-    # Scrollbar y área de texto
     scrollbar = ttk.Scrollbar(result_frame)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     
@@ -266,18 +262,15 @@ def crear_interfaz():
     
     scrollbar.config(command=text_area.yview)
     
-    # Variable de resultado
     resultado = tk.StringVar()
     resultado.trace('w', lambda *args: actualizar_resultado())
 
 def actualizar_resultado():
-    """Actualiza el área de texto con el nuevo resultado"""
     text_area.delete(1.0, tk.END)
     text_area.insert(tk.END, resultado.get())
 
 # Modificar las funciones que muestran resultados para usar el área de texto
 def mostrar_frecuencia_rutas():
-    """Muestra la frecuencia de cada ruta en el área de texto"""
     mensaje = "Frecuencia de Rutas:\n\n"
     for (origen_id, destino_id), frecuencia in frecuencia_rutas.items():
         origen = aeropuertos_df[aeropuertos_df['airport_id'] == int(origen_id)]['name'].values[0]
@@ -287,13 +280,12 @@ def mostrar_frecuencia_rutas():
     text_area.insert(tk.END, mensaje)
 
 if __name__ == "__main__":
-    # Cargar datasets y crear el grafo globalmente
+    # Carga datasets y crear el grafo globalmente
     rutas_df, aeropuertos_df = cargar_datos()
     G = crear_grafo(rutas_df)
 
-    # Crear la ventana principal
     root = tk.Tk()
-    root.title("Optimización de Rutas Aéreas en Norteamérica")
+    root.title("Optimizacion de Rutas Aareas en Norteamerica")
     root.geometry("1200x800")
 
     crear_interfaz()
