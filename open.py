@@ -67,10 +67,10 @@ def calcular_y_visualizar_rutas():
     else:
         resultado.set(f"No se encontraron rutas desde {origen}.")
 
-# Visualizar rutas desde el aeropuerto de origen usando Basemap
+# Visualizar rutas desde el aeropuerto de origen
 def visualizar_rutas_conectadas(origen_id, rutas_desde_origen):
 
-    # Muestra las rutas conectadas desde un aeropuerto de origen.
+    # Muestra las rutas conectadas desde un aeropuerto de origen
     plt.figure(figsize=(15, 10))
     m = Basemap(llcrnrlon=-130, llcrnrlat=20, urcrnrlon=-60, urcrnrlat=55, projection='lcc', lat_1=33, lat_2=45, lon_0=-95)
     m.drawcoastlines()
@@ -174,7 +174,7 @@ def calcular_flujo_maximo():
     except nx.NetworkXError as e:
         resultado.set(f"Error al calcular el flujo maximo: {str(e)}")
 
-# Visualiza el grafo con las rutas del flujo maximo.
+# Visualiza el grafo con las rutas del flujo maximo
 def visualizar_flujo_maximo(flow_edges: List[Tuple[str, str]], origen_id: str, destino_id: str):
     
     plt.figure(figsize=(15, 10))
@@ -189,11 +189,10 @@ def visualizar_flujo_maximo(flow_edges: List[Tuple[str, str]], origen_id: str, d
             start_lon, start_lat = float(start['long'].iloc[0]), float(start['lat'].iloc[0])
             end_lon, end_lat = float(end['long'].iloc[0]), float(end['lat'].iloc[0])
             
-            # Utiliza plot() y great_circle() en lugar de drawgreatcircle()
+            
             x1, y1 = m(start_lon, start_lat)
             x2, y2 = m(end_lon, end_lat)
             
-            # Trazar el círculo entre los puntos
             m.plot([x1, x2], [y1, y2], marker='o', color='purple', linewidth=2, alpha=0.6)
             
             # Marcar los puntos de origen y destino
@@ -204,7 +203,7 @@ def visualizar_flujo_maximo(flow_edges: List[Tuple[str, str]], origen_id: str, d
     plt.legend()
     plt.show()
 
-# Actualiza la frecuencia de la ruta entre dos aeropuertos.
+# Actualiza la frecuencia de la ruta entre dos aeropuertos
 def actualizar_frecuencia_ruta(origen_id: str, destino_id: str):
     
     if (origen_id, destino_id) not in frecuencia_rutas:
@@ -269,7 +268,7 @@ def actualizar_resultado():
     text_area.delete(1.0, tk.END)
     text_area.insert(tk.END, resultado.get())
 
-# Modificar las funciones que muestran resultados para usar el área de texto
+# Modificar las funciones que muestran resultados para usar el area de texto
 def mostrar_frecuencia_rutas():
     mensaje = "Frecuencia de Rutas:\n\n"
     for (origen_id, destino_id), frecuencia in frecuencia_rutas.items():
@@ -280,7 +279,7 @@ def mostrar_frecuencia_rutas():
     text_area.insert(tk.END, mensaje)
 
 if __name__ == "__main__":
-    # Carga datasets y crear el grafo globalmente
+    # Carga datasets y crear el grafo
     rutas_df, aeropuertos_df = cargar_datos()
     G = crear_grafo(rutas_df)
 
