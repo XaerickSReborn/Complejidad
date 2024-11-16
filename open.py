@@ -210,6 +210,59 @@ def actualizar_frecuencia_ruta(origen_id: str, destino_id: str):
         frecuencia_rutas[(origen_id, destino_id)] = 0
     frecuencia_rutas[(origen_id, destino_id)] += 1
 
+
+# Algoritmo Bellman-Ford
+def calcular_camino_minimo_bellman_ford():
+    global G, aeropuertos_df
+
+    origen = aeropuerto_origen.get()
+    destino = aeropuerto_destino.get()
+
+    # IDs de origen y destino
+    origen_id = aeropuertos_df[aeropuertos_df['name'] == origen]['airport_id']
+    destino_id = aeropuertos_df[aeropuertos_df['name'] == destino]['airport_id']
+
+    if origen_id.empty or destino_id.empty:
+        resultado.set("Aeropuerto de origen o destino no encontrado.")
+        return
+
+    origen_id = str(origen_id.values[0])
+    destino_id = str(destino_id.values[0])
+    
+    try:
+        # Usa Bellman-Ford para calcular el camino minimo desde el origen
+        distancias, rutas = nx.single_source_bellman_ford(G, source=origen_id, weight='weight')
+
+        if destino_id not in distancias:
+            resultado.set("No hay ruta entre el aeropuerto de origen y el destino.")
+            return
+
+        # Reconstruir la ruta hacia el destino
+        distancia = distancias[destino_id]
+        camino = []
+        nodo_actual = destino_id
+
+        # Manejo de rutas como diccionario
+        while nodo_actual != origen_id:
+            if isinstance(rutas[nodo_actual], list):
+                rutas[nodo_actual] = rutas[nodo_actual][0]
+            camino.append(nodo_actual)
+            nodo_actual = rutas[nodo_actual]
+        camino.append(origen_id)
+        camino.reverse()
+
+        # Obtener nombres de los aeropuertos en el camino
+        nombres_camino = [aeropuertos_df[aeropuertos_df['airport_id'] == int(n)]['name'].values[0] for n in camino]
+
+        mensaje = f"Camino minimo desde {origen} hacia {destino}:\n\n"
+        mensaje += " -> ".join(nombres_camino) + f"\n\nDistancia total: {distancia} unidades"
+        text_area.delete(1.0, tk.END)
+        text_area.insert(tk.END, mensaje)
+    except nx.NetworkXUnbounded:
+        resultado.set("El grafo contiene ciclos con pesos negativos.")
+    except nx.NetworkXNoPath:
+        resultado.set("No hay ruta entre el aeropuerto de origen y el destino.")
+
 def crear_interfaz():
     global root, aeropuerto_origen, aeropuerto_destino, resultado, text_area
     
@@ -247,6 +300,11 @@ def crear_interfaz():
     boton_frecuencia_rutas = ttk.Button(button_frame, text="Mostrar Frecuencia de Rutas",
                                        command=mostrar_frecuencia_rutas)
     boton_frecuencia_rutas.pack(side=tk.LEFT, padx=5)
+
+    # Botón para Bellman-Ford
+    boton_bellman_ford = ttk.Button(button_frame, text="Caminos Minimos (Bellman-Ford)", 
+                               command=calcular_camino_minimo_bellman_ford)
+    boton_bellman_ford.pack(side=tk.LEFT, padx=5)
     
 
     # Scroll
