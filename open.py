@@ -115,28 +115,24 @@ def dijkstra_shortest_path():
 
 # Algoritmo Floyd Warshall
 def floyd_warshall():
-    """Implementa el algoritmo de Floyd-Warshall para todas las rutas posibles."""
     global G
     
     try:
-        # Calcular las distancias más cortas entre todos los pares de nodos
+       
         distancias = dict(nx.floyd_warshall(G, weight='weight'))
         
-        mensaje = "Análisis de rutas (Floyd-Warshall):\n\n"
-        mensaje += "Top 10 rutas más cortas:\n"
+        mensaje = "Analisis de rutas (Floyd-Warshall):\n\n"
+        mensaje += "Top 100 rutas mas cortas:\n"
         
-        # Convertir el diccionario de distancias a una lista para ordenar
-        # Filtrar las rutas que van de un aeropuerto a sí mismo
         rutas_ordenadas = [(origen, destino, dist) 
                           for origen in distancias 
                           for destino, dist in distancias[origen].items()
-                          if origen != destino]  # Excluir rutas hacia el mismo aeropuerto
+                          if origen != destino]
         
         # Ordenar por distancia
         rutas_ordenadas.sort(key=lambda x: x[2])
         
-        # Mostrar las 10 rutas más cortas (excluyendo rutas a sí mismo)
-        for origen_id, destino_id, distancia in rutas_ordenadas[:10]:
+        for origen_id, destino_id, distancia in rutas_ordenadas[:100]:
             origen = aeropuertos_df[aeropuertos_df['airport_id'] == int(origen_id)]['name'].values[0]
             destino = aeropuertos_df[aeropuertos_df['airport_id'] == int(destino_id)]['name'].values[0]
             mensaje += f"{origen} -> {destino}: {distancia:.2f} km\n"
@@ -148,7 +144,7 @@ def floyd_warshall():
         resultado.set(f"Error en Floyd-Warshall: {str(e)}")
 
 
-# Calcula rutas desde el aeropuerto de origen y visualizar
+# Calcula todas las rutas desde el aeropuerto de origen
 def calcular_y_visualizar_rutas():
     global G, aeropuertos_df
 
@@ -166,7 +162,7 @@ def calcular_y_visualizar_rutas():
         resultado.set(f"Rutas desde {origen}: {len(rutas_desde_origen)}")
         visualizar_rutas_conectadas(origen_id, rutas_desde_origen)
         
-        # Actualizar la frecuencia de cada ruta recorrida
+        # Actualiza la frecuencia de cada ruta recorrida
         for destino_id in rutas_desde_origen:
             actualizar_frecuencia_ruta(origen_id, destino_id)
     else:
@@ -198,32 +194,6 @@ def visualizar_rutas_conectadas(origen_id, rutas_desde_origen):
     plt.title(f"Rutas desde {origen['name'].values[0]}")
     plt.legend()
     plt.show()
-
-# Calcular la ruta rapida entre el aeropuerto de origen y destino
-def calcular_ruta_rapida() -> None:
-    global G, aeropuertos_df, distancias_minimas
-    
-    origen = aeropuerto_origen.get()
-    destino = aeropuerto_destino.get()
-    
-    origen_id = aeropuertos_df[aeropuertos_df['name'] == origen]['airport_id']
-    destino_id = aeropuertos_df[aeropuertos_df['name'] == destino]['airport_id']
-    
-    if origen_id.empty or destino_id.empty:
-        resultado.set("Aeropuerto de origen o destino no encontrado.")
-        return
-    
-    origen_id = str(origen_id.values[0])
-    destino_id = str(destino_id.values[0])
-    
-    try:
-        # Calcula la ruta más rapida entre los aeropuertos de origen y destino
-        ruta_rapida = nx.shortest_path(G, source=origen_id, target=destino_id, weight='weight')
-        resultado.set(f"Ruta rapida encontrada: {ruta_rapida}")
-        
-        visualizar_ruta(ruta_rapida)
-    except nx.NetworkXNoPath:
-        resultado.set("No existe una ruta entre los aeropuertos seleccionados.")
 
 
 # Visualizar una ruta usando Basemap
@@ -277,18 +247,15 @@ def ford_fulkerson():
     destino_id = str(destino_id.values[0])
 
     try:
-        # Crear una copia del grafo para el flujo
         G_flow = G.copy()
         for u, v in G_flow.edges():
             G_flow[u][v]['capacity'] = 1
 
-        # Calcular flujo máximo
         flow_value, flow_dict = nx.maximum_flow(G_flow, origen_id, destino_id)
         
-        # Obtener todas las conexiones con flujo positivo
+        # Se obtiene todas las conexiones con flujo positivo
         flow_edges = [(u, v) for u in flow_dict for v, flow in flow_dict[u].items() if flow > 0]
 
-        # Primera visualización: Todas las conexiones posibles
         plt.figure(figsize=(15, 10))
         m = Basemap(llcrnrlon=-130, llcrnrlat=20, urcrnrlon=-60, urcrnrlat=55, 
                    projection='lcc', lat_1=33, lat_2=45, lon_0=-95)
@@ -296,7 +263,6 @@ def ford_fulkerson():
         m.drawcountries()
         m.drawstates()
 
-        # Dibujar todas las conexiones con flujo positivo
         for start_id, end_id in flow_edges:
             start = aeropuertos_df[aeropuertos_df['airport_id'] == int(start_id)]
             end = aeropuertos_df[aeropuertos_df['airport_id'] == int(end_id)]
@@ -308,16 +274,14 @@ def ford_fulkerson():
                 x1, y1 = m(start_lon, start_lat)
                 x2, y2 = m(end_lon, end_lat)
                 
-                # Dibujar líneas para todas las conexiones
                 m.plot([x1, x2], [y1, y2], 'b-', linewidth=1, alpha=0.6)
                 m.plot(x1, y1, 'bo', markersize=6)
                 m.plot(x2, y2, 'bo', markersize=6)
 
-        plt.title("Todas las conexiones posibles en el flujo máximo")
+        plt.title("Todas las conexiones posibles en el flujo maximo")
         plt.show()
 
-        # Preparar mensaje con todas las conexiones
-        mensaje = f"Flujo máximo entre {origen} y {destino}: {flow_value} rutas\n\n"
+        mensaje = f"Flujo maximo entre {origen} y {destino} \n\n"
         mensaje += "Todas las conexiones utilizadas en el flujo:\n"
         for u, v in flow_edges:
             origen_nombre = aeropuertos_df[aeropuertos_df['airport_id'] == int(u)]['name'].values[0]
@@ -341,18 +305,15 @@ def ford_fulkerson():
 
         dfs(origen_id)
 
-        # Agregar rutas efectivas al mensaje
         mensaje += "\nRutas utilizadas en el camino efectivo:\n"
         for u, v in reversed(rutas_utilizadas):
             origen_nombre = aeropuertos_df[aeropuertos_df['airport_id'] == int(u)]['name'].values[0]
             destino_nombre = aeropuertos_df[aeropuertos_df['airport_id'] == int(v)]['name'].values[0]
             mensaje += f"{origen_nombre} -> {destino_nombre}\n"
 
-        # Mostrar el mensaje en la interfaz
         text_area.delete(1.0, tk.END)
         text_area.insert(tk.END, mensaje)
 
-        # Segunda visualización: Solo el camino efectivo
         plt.figure(figsize=(15, 10))
         m = Basemap(llcrnrlon=-130, llcrnrlat=20, urcrnrlon=-60, urcrnrlat=55, 
                    projection='lcc', lat_1=33, lat_2=45, lon_0=-95)
@@ -360,7 +321,6 @@ def ford_fulkerson():
         m.drawcountries()
         m.drawstates()
 
-        # Dibujar solo las rutas efectivas
         for start_id, end_id in rutas_utilizadas:
             start = aeropuertos_df[aeropuertos_df['airport_id'] == int(start_id)]
             end = aeropuertos_df[aeropuertos_df['airport_id'] == int(end_id)]
@@ -372,28 +332,15 @@ def ford_fulkerson():
                 x1, y1 = m(start_lon, start_lat)
                 x2, y2 = m(end_lon, end_lat)
                 
-                # Dibujar líneas más gruesas para el camino efectivo
                 m.plot([x1, x2], [y1, y2], 'r-', linewidth=2)
                 m.plot(x1, y1, 'ro', markersize=8)
                 m.plot(x2, y2, 'ro', markersize=8)
 
-        plt.title("Camino efectivo en el flujo máximo")
+        plt.title("Camino efectivo en el flujo maximo")
         plt.show()
 
     except nx.NetworkXError as e:
         resultado.set(f"Error en Ford-Fulkerson: {str(e)}")
-
-
-# Actualiza la frecuencia de uso de una ruta.
-def actualizar_frecuencia_ruta(origen_id: str, destino_id: str):
-    
-    global frecuencia_rutas
-    
-    if len(frecuencia_rutas) > 100:
-        frecuencia_rutas.clear()
-    
-    key = (origen_id, destino_id)
-    frecuencia_rutas[key] = frecuencia_rutas.get(key, 0) + 1
 
 
 # Algoritmo Bellman-Ford
@@ -415,19 +362,17 @@ def calcular_camino_minimo_bellman_ford():
     destino_id = str(destino_id.values[0])
     
     try:
-        # Usa Bellman-Ford para calcular el camino minimo desde el origen
+        # Uso de Bellman Ford para calcular el camino minimo desde el origen
         distancias, rutas = nx.single_source_bellman_ford(G, source=origen_id, weight='weight')
 
         if destino_id not in distancias:
             resultado.set("No hay ruta entre el aeropuerto de origen y el destino.")
             return
 
-        # Reconstruir la ruta hacia el destino
         distancia = distancias[destino_id]
         camino = []
         nodo_actual = destino_id
 
-        # Manejo de rutas como diccionario
         while nodo_actual != origen_id:
             if isinstance(rutas[nodo_actual], list):
                 rutas[nodo_actual] = rutas[nodo_actual][0]
@@ -440,13 +385,49 @@ def calcular_camino_minimo_bellman_ford():
         nombres_camino = [aeropuertos_df[aeropuertos_df['airport_id'] == int(n)]['name'].values[0] for n in camino]
 
         mensaje = f"Camino minimo desde {origen} hacia {destino}:\n\n"
-        mensaje += " -> ".join(nombres_camino) + f"\n\nDistancia total: {distancia} unidades"
+        mensaje += " -> ".join(nombres_camino) + f"\n\nDistancia total: {distancia} km"
         text_area.delete(1.0, tk.END)
         text_area.insert(tk.END, mensaje)
     except nx.NetworkXUnbounded:
         resultado.set("El grafo contiene ciclos con pesos negativos.")
     except nx.NetworkXNoPath:
         resultado.set("No hay ruta entre el aeropuerto de origen y el destino.")
+
+
+# Frecuencia de Rutas
+def actualizar_frecuencia_ruta(origen_id: str, destino_id: str):
+    
+    global frecuencia_rutas
+    
+    if len(frecuencia_rutas) > 100:
+        frecuencia_rutas.clear()
+    
+    key = (origen_id, destino_id)
+    frecuencia_rutas[key] = frecuencia_rutas.get(key, 0) + 1
+
+def limpiar_resultados():
+    text_area.delete(1.0, tk.END)
+    frecuencia_rutas.clear()
+    resultado.set("")
+
+
+def actualizar_resultado():
+    
+    texto_actual = resultado.get()
+    if texto_actual:
+        text_area.delete(1.0, tk.END)
+        text_area.insert(tk.END, texto_actual)
+
+
+def mostrar_frecuencia_rutas():
+    mensaje = "Frecuencia de Rutas:\n\n"
+    for (origen_id, destino_id), frecuencia in frecuencia_rutas.items():
+        origen = aeropuertos_df[aeropuertos_df['airport_id'] == int(origen_id)]['name'].values[0]
+        destino = aeropuertos_df[aeropuertos_df['airport_id'] == int(destino_id)]['name'].values[0]
+        mensaje += f"{origen} -> {destino}: {frecuencia} veces\n"
+    text_area.delete(1.0, tk.END)
+    text_area.insert(tk.END, mensaje)
+
 
 def crear_interfaz():
     global root, aeropuerto_origen, aeropuerto_destino, resultado, text_area
@@ -471,13 +452,13 @@ def crear_interfaz():
     button_frame.pack(fill=tk.X, pady=(0, 10))
     
     # Botones para los diferentes algoritmos
-    ttk.Button(button_frame, text="Dijkstra - Ruta más corta", 
+    ttk.Button(button_frame, text="Dijkstra - Ruta mas corta", 
                command=dijkstra_shortest_path).pack(side=tk.LEFT, padx=5)
     
-    ttk.Button(button_frame, text="Floyd-Warshall - Todas las rutas", 
+    ttk.Button(button_frame, text="Floyd-Warshall", 
                command=floyd_warshall).pack(side=tk.LEFT, padx=5)
     
-    ttk.Button(button_frame, text="Ford-Fulkerson - Flujo máximo", 
+    ttk.Button(button_frame, text="Ford-Fulkerson - Flujo maximo", 
                command=ford_fulkerson).pack(side=tk.LEFT, padx=5)
     
     ttk.Button(button_frame, text="Mostrar Frecuencia de Rutas",
@@ -489,7 +470,7 @@ def crear_interfaz():
     ttk.Button(button_frame, text="Ver todas las rutas",
                command=calcular_y_visualizar_rutas).pack(side=tk.LEFT, padx=5)
 
-    # Área de resultados con scroll
+    
     result_frame = ttk.Frame(main_frame)
     result_frame.pack(fill=tk.BOTH, expand=True)
     
@@ -505,36 +486,13 @@ def crear_interfaz():
     resultado.trace('w', lambda *args: actualizar_resultado())
 
 
-def limpiar_resultados():
-    text_area.delete(1.0, tk.END)
-    frecuencia_rutas.clear()
-    resultado.set("")
-
-
-def actualizar_resultado():
-    
-    texto_actual = resultado.get()
-    if texto_actual:
-        text_area.delete(1.0, tk.END)
-        text_area.insert(tk.END, texto_actual)
-
-# Frecuencia de Rutas
-def mostrar_frecuencia_rutas():
-    mensaje = "Frecuencia de Rutas:\n\n"
-    for (origen_id, destino_id), frecuencia in frecuencia_rutas.items():
-        origen = aeropuertos_df[aeropuertos_df['airport_id'] == int(origen_id)]['name'].values[0]
-        destino = aeropuertos_df[aeropuertos_df['airport_id'] == int(destino_id)]['name'].values[0]
-        mensaje += f"{origen} -> {destino}: {frecuencia} veces\n"
-    text_area.delete(1.0, tk.END)
-    text_area.insert(tk.END, mensaje)
-
 if __name__ == "__main__":
     # Cargar datos y crear el grafo
     rutas_df, aeropuertos_df = cargar_datos()
     G = crear_grafo(rutas_df)
     
     root = tk.Tk()
-    root.title("Optimización de Rutas Aéreas en Estados Unidos")
+    root.title("Optimizacion de Rutas Aereas en Estados Unidos")
     root.geometry("1200x800")
     
     crear_interfaz()
