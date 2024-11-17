@@ -12,10 +12,10 @@ aeropuertos_df = None
 distancias_minimas = None
 frecuencia_rutas = {}
 
-# Distancia entre dos puntos usando la formula de Haversine.
+# Formula de Haversine 
 def calcular_distancia_haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    
-    R = 6371  # Radio de la Tierra en km
+    # Radio de la Tierra en km
+    R = 6371  
 
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
     dlat = lat2 - lat1
@@ -259,7 +259,7 @@ def visualizar_ruta(path: list) -> None:
 
 
 
-
+# Algoritmo Ford Fulkerson
 def ford_fulkerson():
     global G, aeropuertos_df
 
@@ -384,16 +384,17 @@ def ford_fulkerson():
         resultado.set(f"Error en Ford-Fulkerson: {str(e)}")
 
 
+# Actualiza la frecuencia de uso de una ruta.
 def actualizar_frecuencia_ruta(origen_id: str, destino_id: str):
-    """Actualiza la frecuencia de uso de una ruta."""
+    
     global frecuencia_rutas
     
-    # Limpiar frecuencias anteriores si es una nueva búsqueda
-    if len(frecuencia_rutas) > 100:  # Límite arbitrario para evitar crecimiento excesivo
+    if len(frecuencia_rutas) > 100:
         frecuencia_rutas.clear()
     
     key = (origen_id, destino_id)
     frecuencia_rutas[key] = frecuencia_rutas.get(key, 0) + 1
+
 
 # Algoritmo Bellman-Ford
 def calcular_camino_minimo_bellman_ford():
@@ -503,21 +504,21 @@ def crear_interfaz():
     resultado = tk.StringVar()
     resultado.trace('w', lambda *args: actualizar_resultado())
 
+
 def limpiar_resultados():
-    """Limpia el área de resultados y reinicia las frecuencias."""
     text_area.delete(1.0, tk.END)
     frecuencia_rutas.clear()
     resultado.set("")
 
 
 def actualizar_resultado():
-    """Actualiza el área de texto con el nuevo resultado."""
+    
     texto_actual = resultado.get()
     if texto_actual:
         text_area.delete(1.0, tk.END)
         text_area.insert(tk.END, texto_actual)
 
-# Modificar las funciones que muestran resultados para usar el area de texto
+# Frecuencia de Rutas
 def mostrar_frecuencia_rutas():
     mensaje = "Frecuencia de Rutas:\n\n"
     for (origen_id, destino_id), frecuencia in frecuencia_rutas.items():
@@ -532,18 +533,14 @@ if __name__ == "__main__":
     rutas_df, aeropuertos_df = cargar_datos()
     G = crear_grafo(rutas_df)
     
-    # Crear la ventana principal
     root = tk.Tk()
     root.title("Optimización de Rutas Aéreas en Estados Unidos")
     root.geometry("1200x800")
     
-    # Crear la interfaz
     crear_interfaz()
     
-    # Añadir botón de limpieza
     button_frame = root.winfo_children()[0].winfo_children()[1]
     ttk.Button(button_frame, text="Limpiar Resultados", 
                command=limpiar_resultados).pack(side=tk.LEFT, padx=5)
     
-    # Iniciar el loop principal
     root.mainloop()
