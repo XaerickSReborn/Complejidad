@@ -74,7 +74,7 @@ def crear_grafo(rutas_df: pd.DataFrame) -> nx.DiGraph:
 
 
 # Calcular rutas desde el aeropuerto de origen y visualizar
-def dijkstra_shortest_path():
+def dijkstra():
     global G, aeropuertos_df
     
     origen = aeropuerto_origen.get()
@@ -453,7 +453,7 @@ def crear_interfaz():
     
     # Botones para los diferentes algoritmos
     ttk.Button(button_frame, text="Dijkstra - Ruta mas corta", 
-               command=dijkstra_shortest_path).pack(side=tk.LEFT, padx=5)
+               command=dijkstra).pack(side=tk.LEFT, padx=5)
     
     ttk.Button(button_frame, text="Floyd-Warshall", 
                command=floyd_warshall).pack(side=tk.LEFT, padx=5)
